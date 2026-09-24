@@ -1,0 +1,13 @@
+defaults:
+  timeout_seconds: 5
+  retries: 2
+checks:
+  - name: api-health
+    url: https://api.example.com/healthz
+    expect_status: 200
+    expect_json_path: "$.status"
+    expect_value: "ok"
+  - name: static-assets
+    url: https://cdn.example.com/app.js
+    expect_status: 200
+    expect_header: {content-type: "application/javascript"}
