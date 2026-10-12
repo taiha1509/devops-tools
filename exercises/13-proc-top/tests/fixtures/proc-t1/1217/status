@@ -1,0 +1,12 @@
+Name:	my proc)
+Umask:	0022
+State:	S (sleeping)
+Tgid:	1217
+Pid:	1217
+Uid:	1000	1000	1000	1000
+Gid:	1000	1000	1000	1000
+VmPeak:	614400 kB
+VmSize:	409600 kB
+VmRSS:	204800 kB
+RssAnon:	102400 kB
+Threads:	4

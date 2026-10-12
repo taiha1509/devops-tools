@@ -1,0 +1,112 @@
+name: "Deploy Gate"
+description: >-
+  Decide whether a deploy may proceed: change-freeze windows, error-budget burn,
+  and open incidents. Fails closed, and every override is audited.
+author: "your-org"
+
+branding:
+  icon: "shield"
+  color: "red"
+
+# --- Decide composite vs Docker, and write down why -------------------------
+#
+# This file is scaffolded as a **composite** action. That is a starting point,
+# not the answer - the brief asks you to pick deliberately and record the
+# reasoning in DECISIONS.md.
+#
+#   composite  starts faster, no image build or pull, but runs on whatever
+#              Python the runner happens to have. `setup-python` pins it, which
+#              means a network fetch on every run and a version matrix you do
+#              not control.
+#   docker     pinned interpreter and real dependencies, reproducible, but adds
+#              image pull or build time to every job and only runs on Linux
+#              runners.
+#
+# For a gate - short-running, called from many repos, and needing to be
+# trustworthy - the trade is genuinely close. Read
+# https://docs.github.com/en/actions/sharing-automations/creating-actions/creating-a-composite-action
+# before choosing, then delete whichever half of this comment you did not pick.
+
+inputs:
+  environment:
+    description: "Target environment, e.g. production. Decides which gates apply."
+    required: true
+
+  freeze-windows:
+    description: "Path to the freeze-window config YAML, relative to the repo root."
+    required: false
+    default: ".github/freeze.yaml"
+
+  error-budget-threshold:
+    description: >-
+      Block when the remaining error budget is below this fraction (0.0-1.0).
+      Omit to disable the gate.
+    required: false
+    default: ""
+
+  metrics-endpoint:
+    description: "URL returning the remaining error budget. Required with error-budget-threshold."
+    required: false
+    default: ""
+
+  incidents-endpoint:
+    description: "URL returning open incidents. Omit to disable the incident gate."
+    required: false
+    default: ""
+
+  override:
+    description: >-
+      Bypass every gate. Always produces an audit log line naming the actor.
+      Prefer the `deploy-gate-override` label so the bypass is visible on the PR.
+    required: false
+    default: "false"
+
+  override-reason:
+    description: "Why the gate is being bypassed. Required when override is true."
+    required: false
+    default: ""
+
+  python-version:
+    description: "Interpreter to pin for the composite action."
+    required: false
+    default: "3.12"
+
+outputs:
+  allowed:
+    description: "true or false. Consume this to make the deploy step conditional."
+    value: ${{ steps.gate.outputs.allowed }}
+  reason:
+    description: "Human-readable explanation of the decision."
+    value: ${{ steps.gate.outputs.reason }}
+  overridden:
+    description: "true when the decision was an override."
+    value: ${{ steps.gate.outputs.overridden }}
+
+runs:
+  using: "composite"
+  steps:
+    # TODO: pin by digest, not by tag. `@v5` is a moving target and this is a
+    # security control - a compromised tag on an action inside your deploy gate
+    # is about the worst place for one.
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install deploy-gate
+      shell: bash
+      run: pip install --quiet "${{ github.action_path }}"
+
+    - name: Evaluate gates
+      id: gate
+      shell: bash
+      # Note: no `|| true`. The gate failing the job *is* the mechanism, and the
+      # exit code is what the brief calls an API.
+      run: |
+        python -m deploy_gate check \
+          --environment "${{ inputs.environment }}" \
+          ${{ inputs.freeze-windows && format('--freeze-windows {0}', inputs.freeze-windows) }} \
+          ${{ inputs.override == 'true' && '--override' || '' }}
+        # TODO: forward the remaining inputs. Building this command line in bash
+        # is already unpleasant, which is a hint - consider reading the inputs
+        # from the INPUT_* environment variables inside Python instead, where you
+        # can validate them and produce a real error message.

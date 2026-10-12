@@ -5,6 +5,9 @@ import typer
 import sys
 from pathlib import Path
 import yaml
+from pydantic import ValidationError
+
+from healthchecker.check import run_all_checks
 from healthchecker.logger import get_logger
 from healthchecker.models import CheckConfig
 
@@ -36,16 +39,21 @@ def main(
     try:
         config = yaml.safe_load(open(config_file))
         try:
-            check_config = CheckConfig(**config)
+            check_config = CheckConfig(
+                timeout_seconds=config["defaults"]["timeout"],
+                retries=config["defaults"]["retries"],
+                checks=config["checks"],
+            )
             checks = check_config.checks
             if check not in [check.name for check in checks]:
                 logger.error('check.validation',extra={'error': 'check value is not valid'})
-                sys.exit(1)
+                sys.exit(2)
 
+            results = run_all_checks(checks, check_config.retries, check_config.timeout_seconds)
 
-
-        except Exception as e:
-            sys.exit(1)
+        except ValidationError as e:
+            logger.error('cli.validation', extra={'config_file': config_file, 'error': e})
+            sys.exit(2)
 
     except FileNotFoundError as e:
         logger.error('cli.validation', extra={'config_file': config_file, 'error': f'File not found: {e}'})

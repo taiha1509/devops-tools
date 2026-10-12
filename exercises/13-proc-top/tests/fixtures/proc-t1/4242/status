@@ -1,0 +1,12 @@
+Name:	defunct-child
+Umask:	0022
+State:	Z (zombie)
+Tgid:	4242
+Pid:	4242
+Uid:	1000	1000	1000	1000
+Gid:	1000	1000	1000	1000
+VmPeak:	0 kB
+VmSize:	0 kB
+VmRSS:	0 kB
+RssAnon:	0 kB
+Threads:	1

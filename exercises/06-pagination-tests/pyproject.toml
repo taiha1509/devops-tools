@@ -1,0 +1,54 @@
+[project]
+name = "pagination-tests"
+version = "0.1.0"
+description = "Exercise E06 - pagination and property-based tests for E04's inventory"
+requires-python = ">=3.12"
+dependencies = [
+    "inventory",
+]
+
+# Like E05, no [build-system]: this exercise adds tests, not a package.
+
+[tool.uv.sources]
+inventory = { path = "../04-multi-account-inventory", editable = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "mypy>=1.13",
+    "ruff>=0.8",
+    "boto3-stubs[ec2,rds,lambda,sts]>=1.35",
+    "moto[ec2,rds,awslambda,sts]>=5.0",
+    "pytest-randomly>=3.15",
+    # Part 2. Hand-written tests check the cases you imagined; property tests find
+    # the ones you did not.
+    "hypothesis>=6.112",
+]
+
+[tool.ruff]
+line-length = 100
+src = ["tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "ANN", "PTH", "T20", "DTZ"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ANN001", "ANN201", "T20"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+# This exercise ships no src/, so the done bar's `mypy --strict src` step has
+# nothing to point at. Run `uv run mypy` instead and it picks up the files below.
+#
+# Test *bodies* are deliberately excluded: the workspace convention (see E01's
+# ruff per-file-ignores) is that test functions go unannotated, and strict mypy
+# and that convention cannot both hold. The fixtures and strategies do get
+# checked, which is where the types carry real information - a strategy whose
+# declared output shape is wrong is a bug that silently weakens every property
+# built on it.
+files = ["tests/conftest.py", "tests/strategies.py"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --durations=5"

@@ -4,6 +4,9 @@ Companion to the [exercise track](README.md). Not a tutorial — a list of the n
 your head so you write Python instead of translating from Bash. Grouped by *what they're for*,
 because that's how you'll reach for them.
 
+For the *punctuation* rather than the names — `*`/`**` in all five positions, `Annotated[...]`,
+decorator stacking order, f-string format specs — see [SYNTAX.md](SYNTAX.md).
+
 Targets Python 3.12+ (what `uv` gives you here). Version notes are marked where it matters.
 
 ---

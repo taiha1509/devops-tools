@@ -1,0 +1,48 @@
+# The second template, which exists to prove the abstraction rather than to
+# assume it. One template proves nothing: every hardcoded assumption about
+# FastAPI, HTTP ports and healthz endpoints looks like generic scaffolding until
+# a second, genuinely different service type has to render through the same code.
+#
+# What differs from python-fastapi, deliberately:
+#   * no HTTP server, so no port, and healthz cannot be an endpoint
+#   * liveness is a touched file plus a Kubernetes exec probe
+#   * CI has no image-exposed-port scan step and a different deploy target
+#
+# If `render_template` needed an `if template == "python-fastapi"` anywhere to
+# make the first one work, this is where that shows up.
+name: python-worker
+version: "1.0.0"
+description: "Queue consumer: no HTTP surface, file-based liveness, deploys as a Deployment."
+
+files:
+  - src: "pyproject.toml.j2"
+    path: "pyproject.toml"
+    generated: true
+
+  - src: "Dockerfile.j2"
+    path: "Dockerfile"
+    generated: true
+
+  - src: "github/workflows/ci.yaml.j2"
+    path: ".github/workflows/ci.yaml"
+    generated: true
+
+  - src: "src/worker.py.j2"
+    path: "src/{{ module }}/worker.py"
+    generated: false
+
+  # TODO: this template is deliberately incomplete. Add the remaining files, each
+  # of which is a real decision rather than a copy:
+  #
+  #   .gitignore        same as python-fastapi, which raises the question below
+  #   .github/CODEOWNERS
+  #   terraform/main.tf a Deployment and a queue, not a log group and a service
+  #   README.md
+  #
+  # The question those first two raise: **four of these files are identical
+  # across both templates.** Options are (a) duplicate them and accept the drift,
+  # (b) a shared partials directory both templates include from, (c) template
+  # inheritance via a `base` template. Each has a real cost. Pick one, implement
+  # it, and record the reasoning in DECISIONS.md - this is the design decision
+  # the exercise is actually for, and it only becomes visible once there are two
+  # templates.

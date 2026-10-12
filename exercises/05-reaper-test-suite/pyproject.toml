@@ -1,0 +1,59 @@
+[project]
+name = "reaper-test-suite"
+version = "0.1.0"
+description = "Exercise E05 - a test suite that earns approval for E03's reaper"
+requires-python = ">=3.12"
+dependencies = [
+    "reaper",
+]
+
+# E05 adds no source code. It is a tests/ directory pointed at E03, so there is
+# no [build-system] block - uv treats this as a virtual project and installs the
+# dependency below without trying to build anything here.
+
+[tool.uv.sources]
+reaper = { path = "../03-orphan-reaper", editable = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "mypy>=1.13",
+    "ruff>=0.8",
+    "boto3>=1.35",
+    "boto3-stubs[ec2,elbv2]>=1.35",
+    "moto[ec2,elbv2]>=5.0",
+    # Random ordering is an acceptance criterion: a test that passes alone and
+    # fails in a suite is a fixture-scoping bug, and you want it found here.
+    "pytest-randomly>=3.15",
+    # Freeze the clock instead of sleeping. Prefer injecting `now` where E03 lets
+    # you; use this for the paths where it does not.
+    "time-machine>=2.15",
+]
+
+[tool.ruff]
+line-length = 100
+src = ["tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "ANN", "PTH", "T20", "DTZ"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ANN001", "ANN201", "T20"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+# This exercise ships no src/, so the done bar's `mypy --strict src` step has
+# nothing to point at. Run `uv run mypy` instead and it picks up the file below.
+#
+# Test *bodies* are deliberately excluded: the workspace convention (see E01's
+# ruff per-file-ignores) is that test functions go unannotated, and strict mypy
+# and that convention cannot both hold. `conftest.py` does get checked, which is
+# where it matters - `ReapOutcome` and the `reap` seam are the suite's real API.
+files = ["tests/conftest.py"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# -q for signal, --durations to police the under-10-seconds criterion. moto runs
+# in-process; if this suite is slow, something is doing real I/O.
+addopts = "-q --durations=5"

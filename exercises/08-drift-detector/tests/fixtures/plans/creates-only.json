@@ -1,0 +1,46 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.5",
+  "resource_changes": [
+    {
+      "address": "aws_cloudwatch_log_group.app",
+      "mode": "managed",
+      "type": "aws_cloudwatch_log_group",
+      "name": "app",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": { "name": "/aws/app", "retention_in_days": 14 },
+        "after_unknown": { "arn": true, "id": true }
+      }
+    },
+    {
+      "address": "aws_ssm_parameter.feature_flag",
+      "mode": "managed",
+      "type": "aws_ssm_parameter",
+      "name": "feature_flag",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": { "name": "/app/feature/new-checkout", "type": "String" },
+        "after_unknown": { "arn": true, "id": true, "version": true }
+      }
+    },
+    {
+      "address": "module.api.aws_lambda_function.handler",
+      "mode": "managed",
+      "type": "aws_lambda_function",
+      "name": "handler",
+      "module_address": "module.api",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": { "function_name": "api-handler", "runtime": "python3.12" },
+        "after_unknown": { "arn": true, "id": true }
+      }
+    }
+  ]
+}

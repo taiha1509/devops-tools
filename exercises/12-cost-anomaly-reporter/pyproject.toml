@@ -1,0 +1,62 @@
+[project]
+name = "cost-watch"
+version = "0.1.0"
+description = "Exercise E12 - cost-anomaly reporter (capstone)"
+requires-python = ">=3.12"
+dependencies = [
+    "typer>=0.15",
+    "pydantic>=2.9",
+    "boto3>=1.35",
+    "httpx>=0.27",
+    "opentelemetry-sdk>=1.28",
+    "opentelemetry-exporter-otlp>=1.28",
+]
+
+[project.scripts]
+cost-watch = "cost_watch.cli:app"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "mypy>=1.13",
+    "ruff>=0.8",
+    "boto3-stubs[ce,cloudwatch]>=1.35",
+    "respx>=0.21",
+    # Cost Explorer is NOT modelled by moto beyond the barest stub, so the
+    # analysis is tested against committed fixture data rather than an emulator.
+    # That is the right call anyway: the interesting content here is the
+    # detection logic, and fixtures let you encode a weekend dip and a month-end
+    # spike exactly, which no emulator would give you.
+    "moto[ce]>=5.0",
+    # Verify emitted spans without standing up a collector.
+    "opentelemetry-sdk>=1.28",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cost_watch"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "ANN", "PTH", "T20", "DTZ"]
+# DTZ is load-bearing in this exercise specifically: Cost Explorer works in dates,
+# and "which day is it" differs between UTC and UTC+7. A naive date here shifts
+# every comparison by one day and the report quietly points at the wrong service.
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ANN001", "ANN201"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

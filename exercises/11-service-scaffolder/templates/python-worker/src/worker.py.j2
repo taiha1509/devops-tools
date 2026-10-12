@@ -1,0 +1,86 @@
+"""{{ name }} - {{ description or "TODO: describe what this worker consumes." }}
+
+Seeded by scaffolder {{ template_name }} {{ template_version }}, then yours.
+
+The shape below is the org's standard worker loop, and the three things it gets
+right are the three things hand-rolled workers get wrong: it drains on SIGTERM,
+it touches a liveness file so a wedged consumer is detectable, and it does no
+work inside the signal handler.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import os
+import signal
+import sys
+import time
+from pathlib import Path
+from types import FrameType
+
+SERVICE_NAME = "{{ name }}"
+LIVENESS_FILE = Path(os.getenv("LIVENESS_FILE", "/var/run/worker/alive"))
+
+log = logging.getLogger(SERVICE_NAME)
+_shutdown = False
+
+
+def _handle_signal(signum: int, _frame: FrameType | None) -> None:
+    """Set a flag. Do **no** work here.
+
+    Python signal handlers run between bytecodes, so I/O or locking inside one is
+    a re-entrancy bug waiting for load. E16 makes this its own requirement; here
+    it is simply the house style.
+    """
+    global _shutdown  # noqa: PLW0603
+    _shutdown = True
+    log.info("shutdown.requested", extra={"fields": {"signal": signal.Signals(signum).name}})
+
+
+def touch_liveness() -> None:
+    """Prove the loop is still turning.
+
+    A worker blocked on a dead queue connection keeps its process alive forever,
+    so a process-existence probe reports it healthy while it consumes nothing.
+    File age is the cheap fix, and the probe is in the Dockerfile's comment.
+    """
+    LIVENESS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    LIVENESS_FILE.touch()
+
+
+def handle_message(body: str) -> None:
+    """Process one message. **This is the part you write.**"""
+    log.info("message.handled", extra={"fields": {"bytes": len(body)}})
+
+
+def main() -> int:
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    logging.basicConfig(handlers=[handler], level=logging.INFO, force=True)
+
+    signal.signal(signal.SIGTERM, _handle_signal)
+    signal.signal(signal.SIGINT, _handle_signal)
+
+    log.info(json.dumps({"event": "worker.started", "service": SERVICE_NAME}))
+
+    while not _shutdown:
+        touch_liveness()
+        # TODO: long-poll the queue and call handle_message per message.
+        #
+        # Two things to get right when you do: delete the message only *after*
+        # handling succeeds, or a crash loses it silently; and keep the poll
+        # timeout well under the pod's terminationGracePeriodSeconds, or SIGTERM
+        # arrives mid-poll and the drain below never runs.
+        time.sleep(1)
+
+    log.info(json.dumps({"event": "worker.draining", "service": SERVICE_NAME}))
+    # TODO: finish in-flight messages here. A consumer that exits immediately on
+    # SIGTERM loses whatever it was holding, and the redrive policy turns that
+    # into a duplicate delivery minutes later.
+    log.info(json.dumps({"event": "worker.stopped", "service": SERVICE_NAME}))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

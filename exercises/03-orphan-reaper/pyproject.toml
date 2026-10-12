@@ -1,0 +1,55 @@
+[project]
+name = "reaper"
+version = "0.1.0"
+description = "Exercise E03 - orphan AWS resource reaper"
+requires-python = ">=3.12"
+dependencies = [
+    "typer>=0.15",
+    "pyyaml (>=6.0.3,<7.0.0)",
+]
+
+[project.scripts]
+reaper = "reaper.cli:app"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "mypy>=1.13",
+    "ruff>=0.8",
+    "boto3>=1.35",
+    # EC2 covers EBS volumes, Elastic IPs and snapshots; elbv2 covers target groups.
+    "boto3-stubs[ec2,elbv2]>=1.35",
+    "moto[ec2,elbv2]>=5.0",
+    # botocore.stub.Stubber is the only way to test pagination here - moto does not
+    # model EC2 NextToken pages. See the notes at the top of tests/test_ebs.py.
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/reaper"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "ANN", "PTH", "T20", "DTZ"]
+# T20 bans print(): this tool logs, it does not print.
+# DTZ bans naive datetimes: age policies on naive timestamps are a real bug class.
+
+[tool.ruff.lint.per-file-ignores]
+# T20 is relaxed here only: print-debugging a test is legitimate. Remember pytest
+# captures stdout on passing tests, so you need `pytest -s` to see it.
+"tests/*" = ["ANN001", "ANN201", "T20"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

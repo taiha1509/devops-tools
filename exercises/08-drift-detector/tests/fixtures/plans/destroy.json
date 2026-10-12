@@ -1,0 +1,32 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.5",
+  "resource_changes": [
+    {
+      "address": "aws_s3_bucket.legacy_uploads",
+      "mode": "managed",
+      "type": "aws_s3_bucket",
+      "name": "legacy_uploads",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["delete"],
+        "before": { "bucket": "app-legacy-uploads", "id": "app-legacy-uploads" },
+        "after": null,
+        "after_unknown": {}
+      }
+    },
+    {
+      "address": "aws_cloudwatch_log_group.old",
+      "mode": "managed",
+      "type": "aws_cloudwatch_log_group",
+      "name": "old",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["delete"],
+        "before": { "name": "/aws/old-app" },
+        "after": null,
+        "after_unknown": {}
+      }
+    }
+  ]
+}

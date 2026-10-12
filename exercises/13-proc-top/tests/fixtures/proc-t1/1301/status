@@ -1,0 +1,12 @@
+Name:	my-very-long-pr
+Umask:	0022
+State:	R (running)
+Tgid:	1301
+Pid:	1301
+Uid:	1000	1000	1000	1000
+Gid:	1000	1000	1000	1000
+VmPeak:	98304 kB
+VmSize:	65536 kB
+VmRSS:	32768 kB
+RssAnon:	16384 kB
+Threads:	2

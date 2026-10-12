@@ -1,0 +1,47 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.5",
+  "resource_drift": [
+    {
+      "address": "aws_security_group_rule.emergency_ingress",
+      "mode": "managed",
+      "type": "aws_security_group_rule",
+      "name": "emergency_ingress",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["update"],
+        "before": { "cidr_blocks": ["10.0.0.0/8"], "from_port": 443 },
+        "after": { "cidr_blocks": ["10.0.0.0/8", "203.0.113.0/24"], "from_port": 443 },
+        "after_unknown": {}
+      }
+    }
+  ],
+  "resource_changes": [
+    {
+      "address": "aws_security_group_rule.emergency_ingress",
+      "mode": "managed",
+      "type": "aws_security_group_rule",
+      "name": "emergency_ingress",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["update"],
+        "before": { "cidr_blocks": ["10.0.0.0/8", "203.0.113.0/24"], "from_port": 443 },
+        "after": { "cidr_blocks": ["10.0.0.0/8"], "from_port": 443 },
+        "after_unknown": {}
+      }
+    },
+    {
+      "address": "aws_cloudwatch_metric_alarm.cpu",
+      "mode": "managed",
+      "type": "aws_cloudwatch_metric_alarm",
+      "name": "cpu",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["update"],
+        "before": { "alarm_name": "cpu-high", "threshold": 80 },
+        "after": { "alarm_name": "cpu-high", "threshold": 90 },
+        "after_unknown": {}
+      }
+    }
+  ]
+}

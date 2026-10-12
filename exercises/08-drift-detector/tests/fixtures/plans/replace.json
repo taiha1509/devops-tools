@@ -1,0 +1,36 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.5",
+  "resource_changes": [
+    {
+      "address": "aws_db_instance.primary",
+      "mode": "managed",
+      "type": "aws_db_instance",
+      "name": "primary",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["delete", "create"],
+        "before": { "identifier": "app-primary", "availability_zone": "eu-west-1a" },
+        "after": { "identifier": "app-primary", "availability_zone": "eu-west-1b" },
+        "after_unknown": { "address": true, "endpoint": true },
+        "replace_paths": [["availability_zone"]]
+      },
+      "action_reason": "replace_because_cannot_update"
+    },
+    {
+      "address": "aws_instance.worker",
+      "mode": "managed",
+      "type": "aws_instance",
+      "name": "worker",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create", "delete"],
+        "before": { "id": "i-0old", "ami": "ami-0000000000" },
+        "after": { "ami": "ami-1111111111" },
+        "after_unknown": { "id": true, "private_ip": true },
+        "replace_paths": [["ami"]]
+      },
+      "action_reason": "replace_because_cannot_update"
+    }
+  ]
+}

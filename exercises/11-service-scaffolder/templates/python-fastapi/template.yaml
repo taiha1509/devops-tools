@@ -1,0 +1,50 @@
+# The reference template. `python-worker` next door is deliberately leaner, so the
+# abstraction is proven by two real users rather than assumed from one.
+#
+# Bump `version` whenever you change any file below. That number is what makes
+# `scaffold check` able to answer "which services have the old CI config?", which
+# is the entire long-term value of this tool.
+name: python-fastapi
+version: "1.0.0"
+description: "HTTP service: FastAPI, uv, OpenTelemetry, deploys to ECS."
+
+# `src` is where the template file lives; `path` is where it lands in the
+# generated service. The two are separate for a mundane but important reason:
+# a source tree containing a real `.github/` directory confuses packaging tools
+# and git hooks, so templates keep their workflows under `github/` and map them
+# into place here. Both are rendered as Jinja2, so `{{ module }}` works in paths.
+files:
+  - src: "pyproject.toml.j2"
+    path: "pyproject.toml"
+    generated: true
+
+  - src: "Dockerfile.j2"
+    path: "Dockerfile"
+    generated: true
+
+  - src: "gitignore.j2"
+    path: ".gitignore"
+    generated: true
+
+  - src: "CODEOWNERS.j2"
+    path: ".github/CODEOWNERS"
+    generated: true
+
+  - src: "github/workflows/ci.yaml.j2"
+    path: ".github/workflows/ci.yaml"
+    generated: true
+
+  - src: "terraform/main.tf.j2"
+    path: "terraform/main.tf"
+    generated: true
+
+  # Seeded once, then the team's. Regeneration must never touch these two - they
+  # are where the actual service lives, and clobbering them is the failure that
+  # makes people stop trusting the tool permanently.
+  - src: "src/main.py.j2"
+    path: "src/{{ module }}/main.py"
+    generated: false
+
+  - src: "README.md.j2"
+    path: "README.md"
+    generated: false

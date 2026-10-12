@@ -1,0 +1,17 @@
+anon 943718400
+file 130023424
+kernel 12582912
+kernel_stack 294912
+pagetables 2097152
+percpu 0
+sock 0
+vmalloc 0
+shmem 0
+file_mapped 4194304
+file_dirty 0
+file_writeback 0
+slab 8445952
+workingset_refault_anon 0
+workingset_refault_file 1024
+pgfault 182341
+pgmajfault 12

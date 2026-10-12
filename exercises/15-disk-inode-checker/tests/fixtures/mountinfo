@@ -1,0 +1,14 @@
+21 25 0:20 / /proc rw,nosuid,nodev,noexec,relatime shared:5 - proc proc rw
+22 25 0:21 / /sys rw,nosuid,nodev,noexec,relatime shared:6 - sysfs sysfs rw
+23 25 0:5 / /dev rw,nosuid,relatime shared:2 - devtmpfs udev rw,size=3996860k,nr_inodes=999215
+24 23 0:22 / /dev/pts rw,nosuid,noexec,relatime shared:3 - devpts devpts rw,gid=5,mode=620
+25 1 253:1 / / rw,relatime shared:1 - ext4 /dev/mapper/vg-root rw,errors=remount-ro
+26 25 0:23 / /run rw,nosuid,nodev,noexec,relatime shared:4 - tmpfs tmpfs rw,size=802136k,mode=755
+27 25 0:24 / /sys/fs/cgroup rw,nosuid,nodev,noexec,relatime shared:7 - cgroup2 cgroup2 rw,nsdelegate
+30 25 253:2 / /var rw,relatime shared:8 - ext4 /dev/mapper/vg-var rw
+31 25 8:1 / /boot rw,relatime shared:9 - ext2 /dev/sda1 rw
+40 25 0:40 / /mnt/my\040backup rw,relatime shared:10 - ext4 /dev/sdb1 rw
+41 25 0:41 / /var/lib/docker/overlay2/abc123/merged rw,relatime - overlay overlay rw,lowerdir=/x,upperdir=/y,workdir=/z
+42 25 0:42 / /var/lib/docker/overlay2/def456/merged rw,relatime - overlay overlay rw,lowerdir=/a,upperdir=/b,workdir=/c
+43 25 0:43 / /dev/shm rw,nosuid,nodev shared:11 - tmpfs tmpfs rw
+50 25 0:50 /sub /mnt/bind rw,relatime master:1 propagate_from:25 - ext4 /dev/sdc1 rw

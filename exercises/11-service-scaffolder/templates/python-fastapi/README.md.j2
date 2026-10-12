@@ -1,0 +1,43 @@
+# {{ name }}
+
+{{ description or "TODO: one sentence on what this service does and who calls it." }}
+
+**Owner:** @your-org/{{ team }}
+
+Seeded by scaffolder `{{ template_name }}` {{ template_version }}. No generated
+marker — this file is yours, and regeneration will not touch it.
+
+## Running locally
+
+```bash
+uv sync
+uv run uvicorn {{ module }}.main:app --reload
+```
+
+- http://localhost:8000/healthz — liveness
+- http://localhost:8000/readyz — readiness
+
+## The quality bar
+
+Identical to every other service in the org, which is the point:
+
+```bash
+uv run ruff check . && uv run ruff format --check . && uv run mypy --strict src && uv run pytest
+```
+
+## Staying current with the template
+
+```bash
+scaffold check .
+```
+
+Reports how far this service has drifted from the current `{{ template_name }}`
+template. Generated files (`Dockerfile`, CI workflow, `terraform/main.tf`) are
+owned by the platform team and are safe to regenerate; everything else is yours.
+
+## TODO before this is really production-ready
+
+- [ ] Replace the placeholder base-image digest in `Dockerfile`
+- [ ] Point the Terraform backend at the org's state bucket
+- [ ] Wire the deploy step to the org's reusable workflow
+- [ ] Write the first real test

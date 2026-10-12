@@ -1,0 +1,49 @@
+[project]
+name = "ptop"
+version = "0.1.0"
+description = "Exercise E13 - ptop: processes from /proc"
+requires-python = ">=3.12"
+dependencies = [
+    "typer>=0.15",
+]
+
+[project.scripts]
+ptop = "ptop.cli:app"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "mypy>=1.13",
+    "ruff>=0.8",
+]
+# No boto3, no moto: nothing in the Linux track touches AWS. (LINUX.md says to
+# copy E01's pyproject forward and drop them - this is that, already done.)
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ptop"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "ANN", "PTH", "T20", "DTZ"]
+# PTH is worth noting here: this track reads /proc constantly, and `pathlib` is
+# the right tool for it - `Path("/proc/1/stat").read_text()` beats open/read/close
+# and handles the vanishing-process case identically.
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ANN001", "ANN201"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

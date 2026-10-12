@@ -1,0 +1,87 @@
+"""{{ name }} - {{ description or "TODO: describe this service." }}
+
+Seeded by scaffolder {{ template_name }} {{ template_version }}, then **yours**.
+No generated marker: regeneration will never touch this file, so edit freely.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import os
+import sys
+from typing import Any
+
+from fastapi import FastAPI
+from opentelemetry import trace
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
+SERVICE_NAME = "{{ name }}"
+
+
+class JsonFormatter(logging.Formatter):
+    """Structured logs, correlated with traces.
+
+    The `trace_id` is the part worth keeping. A log line you cannot connect to a
+    trace is a log line you read in isolation at 3am; with the id you jump
+    straight from the error to the request that caused it.
+    """
+
+    def format(self, record: logging.LogRecord) -> str:
+        payload: dict[str, Any] = {
+            "ts": self.formatTime(record),
+            "level": record.levelname.lower(),
+            "service": SERVICE_NAME,
+            "event": record.getMessage(),
+        }
+        span = trace.get_current_span()
+        context = span.get_span_context()
+        if context.is_valid:
+            payload["trace_id"] = format(context.trace_id, "032x")
+            payload["span_id"] = format(context.span_id, "016x")
+        fields = getattr(record, "fields", None)
+        if isinstance(fields, dict):
+            payload.update(fields)
+        return json.dumps(payload, default=str)
+
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setFormatter(JsonFormatter())
+logging.basicConfig(handlers=[handler], level=logging.INFO, force=True)
+log = logging.getLogger(SERVICE_NAME)
+
+app = FastAPI(title=SERVICE_NAME)
+
+# Reads OTEL_* from the environment; the Dockerfile sets OTEL_SERVICE_NAME. With
+# no collector configured this is a no-op rather than an error, which is what
+# makes it safe to have on by default in every generated service.
+FastAPIInstrumentor.instrument_app(app)
+
+
+@app.get("/healthz")
+def healthz() -> dict[str, str]:
+    """Liveness. Answers "is the process up", nothing more.
+
+    Deliberately checks **nothing** external. A liveness probe that pings the
+    database restarts a healthy service during a database blip, turning a partial
+    outage into a total one plus a crash-loop. That belongs in readiness.
+    """
+    return {"status": "ok", "service": SERVICE_NAME}
+
+
+@app.get("/readyz")
+def readyz() -> dict[str, str]:
+    """Readiness. Answers "can this instance serve traffic right now".
+
+    This is where dependency checks go: the database, the cache, the downstream
+    service. Failing readiness takes the instance out of the load balancer
+    without killing it, so it can recover.
+    """
+    # TODO: check what this service actually needs before it can serve.
+    return {"status": "ready"}
+
+
+@app.get("/")
+def root() -> dict[str, str]:
+    log.info("root.requested", extra={"fields": {"version": os.getenv("APP_VERSION", "dev")}})
+    return {"service": SERVICE_NAME}
